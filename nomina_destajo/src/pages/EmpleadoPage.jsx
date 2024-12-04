@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import  { useEffect, useState } from 'react';
 import { getEmpleados } from '../apis/ApiEmpleado.js';
 import DataGrid, { Column, FilterRow, Paging } from 'devextreme-react/data-grid';
 import 'devextreme/dist/css/dx.light.css';
@@ -14,7 +14,7 @@ const EmpleadoPage = () => {
         const data = await getEmpleados();
         setEmployees(data.resultado); 
       } catch (error) {
-        setError('Error al cargar empleados');
+        setError('Error al cargar empleados: ' + error);
       } finally {
         setLoading(false);
       }
