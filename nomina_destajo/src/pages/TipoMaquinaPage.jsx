@@ -38,6 +38,8 @@ const TipoMaquinaPage = () => {
   };
 
   const handleSave = async () => {
+    console.log(newTipoMaquina)
+
     try {
       if (isEditMode) {
         await updateTipoMaquina(newTipoMaquina.tipoMaquinaId, newTipoMaquina);
@@ -94,6 +96,17 @@ const TipoMaquinaPage = () => {
     setIsEditMode(true); 
     setModalVisible(true); 
   };
+
+  const handleCancel = async() =>{
+    setNewTipoMaquina ({
+      tipoMaquinaId: '',
+      descripcion: '',
+      activo: 'S',
+     
+    })
+    setModalVisible(false);
+    setIsEditMode(false);
+  }
 
   if (loading) return <div>Cargando...</div>;
   if (error) return <div>{error}</div>;
@@ -208,7 +221,7 @@ const TipoMaquinaPage = () => {
                 </div>
               </div>
               <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" onClick={() => setModalVisible(false)}>
+                <button type="button" className="btn btn-secondary" onClick={handleCancel}>
                   Cancelar
                 </button>
                 <button type="button" className="btn btn-primary" onClick={handleSave}>

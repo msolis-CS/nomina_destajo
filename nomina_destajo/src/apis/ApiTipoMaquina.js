@@ -19,6 +19,17 @@ export const getTipoMaquinas = async () => {
   }
 };
 
+export const getTipoMaquinasActivas = async () => {
+  try {
+    const response = await axios.get(`${api_tipo_maquina}ListActive`);
+    return response.data;
+  } catch (error) {
+    console.error('Error al obtener los tipos de máquina:', error);
+    throw error;
+  }
+};
+
+
 export const getTipoMaquinaById = async (id) => {
   try {
     const response = await axios.get(`${api_tipo_maquina}Get/${id}`);
