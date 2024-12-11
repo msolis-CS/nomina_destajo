@@ -43,10 +43,23 @@ const TipoMaquinaPage = () => {
     try {
       if (isEditMode) {
         await updateTipoMaquina(newTipoMaquina.tipoMaquinaId, newTipoMaquina);
-        Swal.fire("Tipo de Máquina actualizado con éxito");
+        
+        Swal.fire({
+          position: "top-center",
+          icon: "success",
+          title: "Tipo de Máquina actualizado con éxito",
+          showConfirmButton: false,
+          timer: 1200
+        });
       } else {
-        await saveTipoMaquina(newTipoMaquina);
-        Swal.fire("Tipo de Máquina guardado con éxito");
+        await saveTipoMaquina(newTipoMaquina);        
+        Swal.fire({
+          position: "top-center",
+          icon: "success",
+          title: "Tipo de Máquina guardado con éxito",
+          showConfirmButton: false,
+          timer: 1200
+        });
       }
 
       setNewTipoMaquina({ tipoMaquinaId: '', descripcion: '', activo: 'S' });
@@ -80,8 +93,14 @@ const TipoMaquinaPage = () => {
       });
 
       if (result.isConfirmed) {
-        await deleteTipoMaquina(id);
-        Swal.fire('Eliminado', 'Tipo de máquina eliminado con éxito', 'success');
+        await deleteTipoMaquina(id);        
+        Swal.fire({
+          position: "top-center",          
+          icon: "success",
+          title: "Tipo de máquina eliminado con éxito",
+          showConfirmButton: false,
+          timer: 1200
+        });
         const data = await getTipoMaquinas();
         setTipoMaquina(data.resultado);
       }
