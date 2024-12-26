@@ -1,22 +1,28 @@
 import { useEffect, useState } from 'react';
 import 'devextreme/dist/css/dx.light.css';
 import { getNominas } from '../apis/ApiNomina.js';
-import { getDetalleProduccionByNomina, saveDetalleProduccion, deleteDetalleProduccion } from '../apis/ApiDetalleProduccion.js';
+import { getDetalleProduccionByNomina, saveDetalleProduccion, deleteDetalleProduccion, updateDetalleProduccionInSoftland } from '../apis/ApiDetalleProduccion.js';
 import { getEmpleadoByNomina } from '../apis/ApiEmpleadoNomina.js';
+import { getTipoMaquinasActivas } from '../apis/ApiTipoMaquina.js';
+import { getCalibresByMaquina } from '../apis/ApiCalibreMaquina.js';
 import SelectBox from 'devextreme-react/select-box';
 import TextBox from 'devextreme-react/text-box';
-import { DateBox, NumberBox } from 'devextreme-react';
+import { Button, DateBox, NumberBox } from 'devextreme-react';
 import DataGrid, { Column, Paging, FilterRow } from 'devextreme-react/data-grid';
 import Swal from 'sweetalert2';
 
 const NominaPage = () => {
   const [nominas, setNominas] = useState([]);
   const [empleados, setEmpleados] = useState([]);
+  const [tipoMaquinas, setTipoMaquinas] = useState([]);
+  const [listCalibres, setCalibres] = useState([]);
   const [detalleProduccion, setDetalleProduccion] = useState([]);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedValue, setSelectedValue] = useState(null);
   const [selectedEmpleado, setSelectedEmpleado] = useState(null);
+  const [selectedTipoMaquina, setSelectedTipoMaquina] = useState(null);
+  const [selectedCalibre, setSelectedCalibre] = useState(null);
   const [selectedNomina, setSelectedNomina] = useState({
     nominaId: '',
     descripcion: '',
@@ -27,10 +33,9 @@ const NominaPage = () => {
     periodo: Date(),
   });
 
-  // Datos para el formulario de ingreso de producción
   const [cantidad, setCantidad] = useState('');
   const [horas, setHoras] = useState('');
-  const [monto, setMonto] = useState(0);
+  const [diaFecha, setDiaFecha] = useState(new Date().toLocaleDateString('en-CA'));
 
   const handleDelete = async (detalle) => {
     const { id } = detalle;
@@ -87,6 +92,39 @@ const NominaPage = () => {
   }, [selectedNomina]);
 
   useEffect(() => {
+    const fetchTipoMaquinas = async () => {
+      try {
+        const data = await getTipoMaquinasActivas();
+        setTipoMaquinas(data.resultado);
+      } catch (error) {
+        setError('Error al cargar los tipos de máquinas: ' + error);
+      }
+    };
+    fetchTipoMaquinas();
+  }, []);
+
+  useEffect(() => {
+    const fetchCalibres = async () => {
+      //console.log(selectedTipoMaquina)
+      if (selectedTipoMaquina) {
+        try {
+          console.log(selectedTipoMaquina)
+          const data = await getCalibresByMaquina(selectedTipoMaquina);
+          setCalibres(data.resultado); 
+        } catch (error) {
+          setError('Error al cargar los calibres: ' + error);
+        } finally {
+        setLoading(false);
+        }
+      } else {
+        setCalibres([]); 
+      }
+    };
+  
+    fetchCalibres();
+  }, [selectedTipoMaquina]); 
+
+  useEffect(() => {
     const fetchDetalleProduccion = async () => {
       try {
         const { nominaId, consecutivo } = selectedNomina;
@@ -120,40 +158,68 @@ const NominaPage = () => {
     }
   };
 
-  const handleSubmit = async () => {
-    if (!selectedEmpleado || !cantidad || !horas) {
-      Swal.fire('Error', 'Por favor, complete todos los campos.', 'error');
+  const AplicarNomina = async () => {
+
+    if (!selectedNomina.nominaId) {
+      Swal.fire('Error', 'Seleccione la nómina.', 'error');
       return;
     }
 
-    const newMonto = parseFloat((cantidad * horas).toFixed(2));
-    setMonto(newMonto);
+    try {
+      const result = await updateDetalleProduccionInSoftland(selectedNomina.nominaId, selectedNomina.consecutivo);
+      if (result.success) {
+        Swal.fire('Éxito', 'Se aplico los datos de producción a la nómina.', 'success');
+        await fetchDetalleProduccion();
+      } else {
+        Swal.fire('Error', 'No se pudo aplicar los datos de producción a la nómina.', 'error');
+      }
+    } catch (error) {
+      Swal.fire('Error', 'Ocurrió un error al aplicar los datos de producción a la nómina. ' + error, 'error');
+    }
+  };
+
+  const handleSubmit = async () => {
+
+    if (!selectedEmpleado) {
+      Swal.fire('Error', 'Seleccione un empleado.', 'error');
+      return;
+    }
+    if (!selectedTipoMaquina) {
+      Swal.fire('Error', 'Seleccione un tipo de máquina.', 'error');
+      return;
+    }   
+    if (!selectedCalibre) {
+      Swal.fire('Error', 'Seleccione el calibre de la máquina.', 'error');
+      return;
+    }     
+    if ( !cantidad || !horas) {
+      Swal.fire('Error', 'Por favor, complete todos los campos.', 'error');
+      return;
+    }
 
     const detalle = {
       nominaId: selectedNomina.nominaId,
       numeroNomina: selectedNomina.consecutivo,
       empleadoId: selectedEmpleado,
-      tipoMaquinaId: "C001",  // Esto lo puedes ajustar según lo necesario
-      calibre: "0.5",  // Puedes actualizar este valor si es necesario
+      tipoMaquinaId: selectedTipoMaquina,
+      calibre: selectedCalibre,
       cantidad: cantidad,
       horas: horas,
-      monto: newMonto, // Usar el monto calculado
-      diaFecha: new Date().toLocaleDateString('en-CA'),
+      monto: 0,
+      diaFecha: diaFecha,
     };
 
-    console.log(detalle)
     try {
       const result = await saveDetalleProduccion(detalle);
       if (result.success) {
         Swal.fire('Éxito', 'El detalle de producción se guardó correctamente.', 'success');
-        
-        // Refrescar la tabla llamando a la API para obtener los detalles actualizados
         await fetchDetalleProduccion();
 
         setCantidad('');
         setHoras('');
-        setMonto(0);
-        setSelectedEmpleado(null); // Limpiar el empleado seleccionado
+        //setSelectedEmpleado(null);
+        setSelectedTipoMaquina(null);
+        setCalibres(null);
       } else {
         Swal.fire('Error', 'No se pudo guardar el detalle de producción.', 'error');
       }
@@ -179,7 +245,7 @@ const NominaPage = () => {
 
   return (
     <div className="container">
-      <br />
+        <br />
       <h1>Procesamiento de Nómina</h1>
       <br />
       <div className="d-flex align-items-center">
@@ -191,6 +257,12 @@ const NominaPage = () => {
           valueExpr="nominaId"
           onValueChanged={handleSelectChange}
           className="me-3 w-50"
+        />
+         <Button
+          type="default"
+          text="Aplicar a Nómina"
+          onClick={AplicarNomina}
+          className="btn-primary"
         />
       </div>
       <br />
@@ -239,10 +311,10 @@ const NominaPage = () => {
         />
       </div>
       <br />
-      <h1 className="mt-4">Formulario de Ingreso de Detalle de Producción</h1>
-      <br/>
+      <h1>Formulario de Ingreso de Detalle de Producción</h1>
+      <br />
       <div className="d-flex align-items-center">
-        <label htmlFor="empleado" className="me-3">Empleado:</label>
+        <label htmlFor="empleado" className="me-4">Empleado:</label>
         <SelectBox
           value={selectedEmpleado}
           dataSource={empleados}
@@ -251,40 +323,62 @@ const NominaPage = () => {
           onValueChanged={(e) => setSelectedEmpleado(e.value)}
           className="me-3 w-50"
           searchEnabled={true}
-          searchMode="contains"
-          searchExpr="empleado.nombre"
+        />
+        <label htmlFor="diaFecha" className="me-3">Fecha:</label>
+        <DateBox
+          value={diaFecha}
+          onValueChanged={(e) => setDiaFecha(e.value)}
+          className="me-3 w-50"
+          displayFormat={"dd/MM/yyyy"}
         />
       </div>
-      <br/>
+      <br />
       <div className="d-flex align-items-center">
-        <label htmlFor="cantidad" className="me-4">Cantidad:</label>
+        <label htmlFor="tipoMaquina" className="me-4">Tipo Máquina:</label>
+        <SelectBox
+          value={selectedTipoMaquina}
+          dataSource={tipoMaquinas}
+          displayExpr="descripcion"
+          valueExpr="tipoMaquinaId"
+          onValueChanged={(e) => setSelectedTipoMaquina(e.value)}
+          className="me-3 w-50"
+          searchEnabled={true}
+        />
+        <label htmlFor="calibre" className="me-3">Calibre:</label>
+        <SelectBox
+          value={selectedCalibre}
+          dataSource={listCalibres}
+          displayExpr="calibre"
+          valueExpr="calibre"
+          onValueChanged={(e) => setSelectedCalibre(e.value)}
+          className="me-3 w-50"
+          searchEnabled={true}
+        />
+      </div>
+      <br />
+      <div className="d-flex align-items-center">
+        <label htmlFor="cantidad" className="me-3">Cantidad:</label>
         <NumberBox
-          id="cantidad"
           value={cantidad}
           onValueChanged={(e) => setCantidad(e.value)}
           className="me-3 w-50"
         />
         <label htmlFor="horas" className="me-3">Horas:</label>
         <NumberBox
-          id="horas"
           value={horas}
           onValueChanged={(e) => setHoras(e.value)}
           className="me-3 w-50"
         />
       </div>
-      <br/>
+      <br />
       <div className="d-flex align-items-center">
-        <label htmlFor="monto" className="me-3">Monto:</label>
-        <NumberBox
-          id="monto"
-          value={monto}
-          disabled={true}
-          className="me-3 w-50"
+      <Button
+          type="success"
+          text="Guardar Detalle"
+          onClick={handleSubmit}
+          className="btn-primary"
         />
       </div>
-      <br/>
-      <button onClick={handleSubmit} className="btn btn-success mt-3">Guardar Detalle de Producción</button>
-
       <h1 className="mt-4">Detalle de Producción</h1>
       <DataGrid dataSource={detalleProduccion} showBorders={true} className="mt-4" columnAutoWidth={true} height={400}>
         <FilterRow visible={true} />

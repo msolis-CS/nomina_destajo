@@ -19,9 +19,9 @@ export const getMaquinasCalibre = async () => {
   }
 };
 
-export const getMaquinaCalibreId = async (idTipoMaquina,calibre) => {
+export const getCalibresByMaquina = async (idTipoMaquina) => {
   try {
-    const response = await axios.get(`${api_maquina_calibre}Get/${idTipoMaquina}/${calibre}`);
+    const response = await axios.get(`${api_maquina_calibre}GetCalibres/${idTipoMaquina}`);
     return response.data;
   } catch (error) {
     console.error(`Error al obtener el detalle de maquina por calibre`, error);

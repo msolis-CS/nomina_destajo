@@ -63,6 +63,16 @@ export const updateDetalleProduccion = async (id, detalleProduccion) => {
   }
 };
 
+export const updateDetalleProduccionInSoftland = async (nominaId, numeroNomina) => {
+  try {
+    const response = await axios.put(`${api_detalle_produccion}UpdateMontosNomina/${nominaId}/${numeroNomina}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error al actualizar el detalle de producción en Softland:', error);
+    throw error;
+  }
+};
+
 // Eliminar un detalle de producción
 export const deleteDetalleProduccion = async (id) => {
   try {
