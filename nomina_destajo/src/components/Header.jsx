@@ -21,7 +21,7 @@ const Header = () => {
                   Procesamiento
                 </Link>
                 <ul className="dropdown-menu dropdown-menu-dark" aria-labelledby="procesamientoDropdown">
-                  <li><Link to="/nomina" className="dropdown-item text-white">Nómina</Link></li>
+                  <li><Link to="/procesamiento/nomina" className="dropdown-item text-white">Nómina</Link></li>
                 </ul>
               </li>
 
@@ -30,11 +30,11 @@ const Header = () => {
                   Mantenimiento
                 </Link>
                 <ul className="dropdown-menu dropdown-menu-dark" aria-labelledby="mantenimientoDropdown">
-                  <li><Link to="/tipoMaquinaList" className="dropdown-item text-white">Tipo de Máquina</Link></li>
-                  <li><Link to="/maquinaCalibreList" className="dropdown-item text-white">Calibre por Máquina</Link></li>
+                  <li><Link to="/mantenimiento/tipomaquina" className="dropdown-item text-white">Tipo de Máquina</Link></li>
+                  <li><Link to="/mantenimiento/maquinacalibre" className="dropdown-item text-white">Calibre por Máquina</Link></li>
                 </ul>
               </li>
-              
+              {/*
               <li className="nav-item dropdown">
                 <Link to="/empleado" className="nav-link dropdown-toggle text-white" id="empleadoDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                   Empleado
@@ -45,7 +45,7 @@ const Header = () => {
               </li>
               <li className="nav-item">
                 <Link to="/about" className="nav-link text-white">Acerca de</Link>
-              </li>
+              </li>*/}
               <li className="nav-item">
                 <Link to="/login" className="nav-link text-white">Inicio Sesión</Link>
               </li>

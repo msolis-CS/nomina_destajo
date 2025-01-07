@@ -35,7 +35,7 @@ export const saveMaquinaCalibre = async (MaquinaCalibre) => {
     return response.data;
   } catch (error) {
     console.error('Error al guardar el detalle de maquina por calibre:', error);
-    throw error;
+    throw new Error(error.response?.data?.message || 'Error al comunicarse con el servidor.');
   }
 };
 
@@ -46,7 +46,7 @@ export const updateMaquinaCalibre = async (idTipoMaquina, calibre, MaquinaCalibr
     return response.data;
   } catch (error) {
     console.error(`Error al actualizar el detalle de maquina por calibre`, error);
-    throw error;
+    throw new Error(error.response?.data?.message || 'Error al comunicarse con el servidor.');
   }
 };
 
@@ -56,6 +56,6 @@ export const deleteMaquinaCalibre = async (idTipoMaquina, calibre) => {
     return response.data;
   } catch (error) {
     console.error(`Error al eliminar el detalle de maquinas por calibre:`, error);
-    throw error;
+    throw new Error(error.response?.data?.message || 'Error al comunicarse con el servidor.');
   }
 };

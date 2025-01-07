@@ -46,7 +46,7 @@ export const saveTipoMaquina = async (tipoMaquina) => {
     return response.data;
   } catch (error) {
     console.error('Error al guardar el tipo de máquina:', error);
-    throw error;
+    throw new Error(error.response?.data?.message || 'Error al comunicarse con el servidor.');
   }
 };
 
@@ -57,7 +57,7 @@ export const updateTipoMaquina = async (id, tipoMaquina) => {
     return response.data;
   } catch (error) {
     console.error(`Error al actualizar el tipo de máquina con ID ${id}:`, error);
-    throw error;
+    throw new Error(error.response?.data?.message || 'Error al comunicarse con el servidor.');
   }
 };
 
@@ -66,7 +66,7 @@ export const deleteTipoMaquina = async (id) => {
     const response = await axios.delete(`${api_tipo_maquina}Delete/${id}`);
     return response.data;
   } catch (error) {
-    console.error(`Error al eliminar el tipo de máquina con ID ${id}:`, error);
-    throw error;
+    console.error('Error al eliminar el tipo de máquina:', error);
+    throw new Error(error.response?.data?.message || 'Error al comunicarse con el servidor.');
   }
 };

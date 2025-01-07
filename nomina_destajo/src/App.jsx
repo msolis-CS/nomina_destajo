@@ -16,10 +16,10 @@ const App = () => {
         <Route path="/" element={<HomePage />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="*" element={<NotFoundPage />} />
-        <Route path="/empleadoList" element={<EmpleadoPage />} />
-        <Route path="/tipoMaquinaList" element={<TipoMaquinaPage />} />
-        <Route path="/maquinaCalibreList" element={<MaquinaCalibrePage />} />
-        <Route path="/nomina" element={<NominaPage  />} />
+        {/*<Route path="/empleadoList" element={<EmpleadoPage />} />*/}
+        <Route path="/mantenimiento/tipomaquina" element={<TipoMaquinaPage />} />
+        <Route path="/mantenimiento/maquinacalibre" element={<MaquinaCalibrePage />} />
+        <Route path="/procesamiento/nomina" element={<NominaPage  />} />
       </Routes>
     </Layout>
   );

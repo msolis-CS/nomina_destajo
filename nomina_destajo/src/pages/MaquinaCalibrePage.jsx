@@ -71,25 +71,34 @@ const MaquinaCalibrePage = () => {
     }
     try {
       if (isEditMode) {
-        await updateMaquinaCalibre(newMaquinaCalibre.tipoMaquinaId, newMaquinaCalibre.calibre, newMaquinaCalibre);
-        
+        const response = await updateMaquinaCalibre(newMaquinaCalibre.tipoMaquinaId, newMaquinaCalibre.calibre, newMaquinaCalibre);        
 
-        Swal.fire({
-          position: "top-center",
-          icon: "success",
-          title: "Detalle de calibre por máquina actualizado con éxito",
-          showConfirmButton: false,
-          timer: 1200
-        });
+        if(response.succes){
+          Swal.fire({
+            position: "top-center",
+            icon: "success",
+            title: response.message,
+            showConfirmButton: false,
+            timer: 1200
+          });
+        } else {
+          Swal.fire('Error', response.message, 'error');
+        }
+
       } else {
-        await saveMaquinaCalibre(newMaquinaCalibre);
-        Swal.fire({
-          position: "top-center",
-          icon: "success",
-          title: "Detalle de calibre por máquina guardado con éxito",
-          showConfirmButton: false,
-          timer: 1200
-        });
+        const response = await saveMaquinaCalibre(newMaquinaCalibre);
+        
+        if(response.succes){
+          Swal.fire({
+            position: "top-center",
+            icon: "success",
+            title: response.message,
+            showConfirmButton: false,
+            timer: 1200
+          });
+        }else{
+          Swal.fire('Error', response.message, 'error');
+        }
       }
 
       setNewMaquinaCalibre({ tipoMaquinaId: '', calibre: '', activo: 'S', coeficiente: null, peso: null });
@@ -100,9 +109,9 @@ const MaquinaCalibrePage = () => {
       setMaquinaCalibre(data.resultado);
     } catch (error) {
       if (isEditMode) {
-        Swal.fire("Error al actualizar el detalle de calibre por máquina: " + error);
+        Swal.fire('Error', error.message || 'No se pudo actualizar el detalle de calibre por máquina.', 'error');
       } else {
-        Swal.fire("Error al guardar el detalle de calibre por máquina: " + error);
+        Swal.fire('Error', error.message || 'No se pudo guardar el detalle de calibre por máquina.', 'error');
       }
     }
   };
@@ -120,20 +129,33 @@ const MaquinaCalibrePage = () => {
       });
 
       if (result.isConfirmed) {
-        await deleteMaquinaCalibre(idTipoMaquina, calibre);
-        
+
         Swal.fire({
-          position: "top-center",
-          icon: "success",
-          title: "Detalle de calibre por máquina eliminado con éxito",
-          showConfirmButton: false,
-          timer: 1200
-        });
-        const data = await getMaquinasCalibre();
-        setMaquinaCalibre(data.resultado);
+                  title: 'Eliminando...',
+                  allowOutsideClick: false,
+                  didOpen: () => {
+                    Swal.showLoading();
+                  },
+                });
+
+        const response = await deleteMaquinaCalibre(idTipoMaquina, calibre);
+        
+        if(response.succes){
+          Swal.fire({
+            position: "top-center",
+            icon: "success",
+            title: response.message,
+            showConfirmButton: false,
+            timer: 1200
+          });
+          const data = await getMaquinasCalibre();
+          setMaquinaCalibre(data.resultado);
+        } else {
+                  Swal.fire('Error', response.message, 'error');
+        }
       }
     } catch (error) {
-      Swal.fire('Error', 'No se pudo eliminar el detalle de calibre por máquina: ' + error, 'error');
+      Swal.fire('Error', error.message || 'No se pudo eliminar el detalle de calibre por máquina.', 'error');
     }
   };
 

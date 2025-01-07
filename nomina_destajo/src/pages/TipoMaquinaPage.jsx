@@ -42,39 +42,47 @@ const TipoMaquinaPage = () => {
 
     try {
       if (isEditMode) {
-        await updateTipoMaquina(newTipoMaquina.tipoMaquinaId, newTipoMaquina);
+        const response = await updateTipoMaquina(newTipoMaquina.tipoMaquinaId, newTipoMaquina);
         
-        Swal.fire({
-          position: "top-center",
-          icon: "success",
-          title: "Tipo de Máquina actualizado con éxito",
-          showConfirmButton: false,
-          timer: 1200
-        });
+        if(response.success){
+            Swal.fire({
+            position: "top-center",
+            icon: "success",
+            title: response.message,
+            showConfirmButton: false,
+            timer: 1200
+          });
+        } else {
+          Swal.fire('Error', response.message, 'error');
+        }
+        
       } else {
-        await saveTipoMaquina(newTipoMaquina);        
-        Swal.fire({
-          position: "top-center",
-          icon: "success",
-          title: "Tipo de Máquina guardado con éxito",
-          showConfirmButton: false,
-          timer: 1200
-        });
+        const response = await saveTipoMaquina(newTipoMaquina);        
+
+        if (response.success) {
+          Swal.fire({
+            position: 'top-center',
+            icon: 'success',
+            title: response.message,
+            showConfirmButton: false,
+            timer: 1200,
+          });        
+
+        } else {
+          Swal.fire('Error', response.message, 'error');
+        }
       }
-
-      setNewTipoMaquina({ tipoMaquinaId: '', descripcion: '', activo: 'S' });
-      setModalVisible(false);
-      setIsEditMode(false);
-
       const data = await getTipoMaquinas();
       setTipoMaquina(data.resultado);
+      
+      setNewTipoMaquina({ tipoMaquinaId: '', descripcion: '', activo: 'S' });
+      setModalVisible(false);
+      setIsEditMode(false);      
     } catch (error) {
       if (isEditMode) {
-
-        Swal.fire("Error al actualizar el tipo de máquina: " + error);
+        Swal.fire('Error', error.message || 'No se pudo actualizar el tipo de máquina.', 'error');
       } else {
-        
-        Swal.fire("Error al guardar el tipo de máquina: " + error);
+        Swal.fire('Error', error.message || 'No se pudo guardar el tipo de máquina.', 'error');
       }
 
     }
@@ -91,23 +99,38 @@ const TipoMaquinaPage = () => {
         cancelButtonColor: '#3085d6',
         confirmButtonText: 'Sí, eliminar',
       });
-
+  
       if (result.isConfirmed) {
-        await deleteTipoMaquina(id);        
         Swal.fire({
-          position: "top-center",          
-          icon: "success",
-          title: "Tipo de máquina eliminado con éxito",
-          showConfirmButton: false,
-          timer: 1200
+          title: 'Eliminando...',
+          allowOutsideClick: false,
+          didOpen: () => {
+            Swal.showLoading();
+          },
         });
-        const data = await getTipoMaquinas();
-        setTipoMaquina(data.resultado);
+  
+        const response = await deleteTipoMaquina(id);
+  
+        if (response.success) {
+          Swal.fire({
+            position: 'top-center',
+            icon: 'success',
+            title: response.message,
+            showConfirmButton: false,
+            timer: 1200,
+          });
+  
+          const data = await getTipoMaquinas();
+          setTipoMaquina(data.resultado);;
+        } else {
+          Swal.fire('Error', response.message, 'error');
+        }
       }
     } catch (error) {
-      Swal.fire('Error', 'No se pudo eliminar el tipo de máquina: ' + error, 'error');
+      Swal.fire('Error', error.message || 'No se pudo eliminar el tipo de máquina.', 'error');
     }
   };
+  
 
   const handleEdit = (id) => {
     const tipo = tipoMaquina.find(item => item.tipoMaquinaId === id);

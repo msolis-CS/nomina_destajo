@@ -9,6 +9,23 @@ const config = {
   },
 };
 
+export const uploadExcel = async (file) => {
+  const formData = new FormData();
+  formData.append("file", file);
+  try {
+    const response = await axios.post(`${api_detalle_produccion}UploadExcel`, formData,
+     {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+     },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error al cargar el archivo Excel:', error);
+    throw new Error(error.response?.data?.message || 'Error al comunicarse con el servidor.');
+  }
+};
+
 // Obtener todos los detalles de producción
 export const getDetallesProduccion = async () => {
   try {
@@ -41,14 +58,15 @@ export const getDetalleProduccionByNomina = async (nominaId, numeroNomina) => {
   }
 };
 
-// Guardar un nuevo detalle de producción
 export const saveDetalleProduccion = async (detalleProduccion) => {
   try {
     const response = await axios.post(`${api_detalle_produccion}Save`, detalleProduccion, config);
     return response.data;
+
+    
   } catch (error) {
     console.error('Error al guardar el detalle de producción:', error);
-    throw error;
+    throw new Error(error.response?.data?.message || 'Error al comunicarse con el servidor.');
   }
 };
 
@@ -59,17 +77,27 @@ export const updateDetalleProduccion = async (id, detalleProduccion) => {
     return response.data;
   } catch (error) {
     console.error('Error al actualizar el detalle de producción:', error);
-    throw error;
+    throw new Error(error.response?.data?.message || 'Error al comunicarse con el servidor.');
   }
 };
 
-export const updateDetalleProduccionInSoftland = async (nominaId, numeroNomina) => {
+export const updateAplicarDetalleProduccionInSoftland = async (nominaId, numeroNomina) => {
   try {
-    const response = await axios.put(`${api_detalle_produccion}UpdateMontosNomina/${nominaId}/${numeroNomina}`);
+    const response = await axios.put(`${api_detalle_produccion}UpdateAplicarMontosNomina/${nominaId}/${numeroNomina}`);
     return response.data;
   } catch (error) {
     console.error('Error al actualizar el detalle de producción en Softland:', error);
-    throw error;
+    throw new Error(error.response?.data?.message || 'Error al comunicarse con el servidor.');
+  }
+};
+
+export const updateDesaplicarDetalleProduccionInSoftland = async (nominaId, numeroNomina) => {
+  try {
+    const response = await axios.put(`${api_detalle_produccion}UpdateDesaplicarMontosNomina/${nominaId}/${numeroNomina}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error al actualizar el detalle de producción en Softland:', error);
+    throw new Error(error.response?.data?.message || 'Error al comunicarse con el servidor.');
   }
 };
 
