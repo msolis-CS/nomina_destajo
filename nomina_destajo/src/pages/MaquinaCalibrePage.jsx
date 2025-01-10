@@ -10,7 +10,7 @@ const MaquinaCalibrePage = () => {
   const [maquinaCalibre, setMaquinaCalibre] = useState([]);
   const [tiposMaquina, setTiposMaquina] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setErrors] = useState({})
   const [modalVisible, setModalVisible] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false); 
   const [newMaquinaCalibre, setNewMaquinaCalibre] = useState({
@@ -27,7 +27,10 @@ const MaquinaCalibrePage = () => {
         const data = await getMaquinasCalibre();
         setMaquinaCalibre(data.resultado);
       } catch (error) {
-        setError('Error al cargar el detalle de calibre por máquina: ' + error);
+        setErrors((prevErrors) => ({
+          ...prevErrors,
+          fetchMaquinaCalibre: 'Error al cargar la tabla de los calibre por máquina: ' + error.message,
+        }));
       } finally {
         setLoading(false);
       }
@@ -38,8 +41,12 @@ const MaquinaCalibrePage = () => {
         const data = await getTipoMaquinasActivas(); 
         setTiposMaquina(data.resultado);
       } catch (error) {
-        setError('Error al cargar los tipos de máquina: ' + error);
+        setErrors((prevErrors) => ({
+          ...prevErrors,
+          fetchTiposMaquina: 'Error al cargar los tipos de máquina: ' + error.message,
+        }));
       }
+      
     };
 
     fetchMaquinaCalibre();
@@ -170,11 +177,28 @@ const MaquinaCalibrePage = () => {
   };
   
 
-  if (loading) return <div>Cargando...</div>;
-  if (error) return <div>{error}</div>;
-
   return (
     <div className="container">
+      {loading && (
+        <div className="d-flex justify-content-center mt-3">
+        <div className="spinner-border text-primary" role="status">
+          <span className="sr-only"></span>
+        </div>
+        </div>
+      )}
+
+      {Object.keys(error).length > 0 && (
+        <div className="alert alert-danger alert-dismissible fade show mt-3" role="alert">
+          <strong>Errores:</strong>
+          <ul>
+            {Object.values(error).map((error, index) => (
+              <li key={index}>{error}</li>
+            ))}
+          </ul>
+          <button type="button" className="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      )}
+
       <br />
       <h1>Lista de Calibres por Máquina</h1>
       <br />

@@ -34,18 +34,9 @@ const Header = () => {
                   <li><Link to="/mantenimiento/maquinacalibre" className="dropdown-item text-white">Calibre por Máquina</Link></li>
                 </ul>
               </li>
-              {/*
-              <li className="nav-item dropdown">
-                <Link to="/empleado" className="nav-link dropdown-toggle text-white" id="empleadoDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                  Empleado
-                </Link>
-                <ul className="dropdown-menu dropdown-menu-dark" aria-labelledby="empleadoDropdown">
-                  <li><Link to="/empleadoList" className="dropdown-item text-white">Listado de Empleados</Link></li>
-                </ul>
-              </li>
               <li className="nav-item">
-                <Link to="/about" className="nav-link text-white">Acerca de</Link>
-              </li>*/}
+                <Link to="/reportes" className="nav-link text-white">Reportes</Link>
+              </li>
               <li className="nav-item">
                 <Link to="/login" className="nav-link text-white">Inicio Sesión</Link>
               </li>

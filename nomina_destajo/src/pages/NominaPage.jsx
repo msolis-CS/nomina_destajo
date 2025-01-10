@@ -11,8 +11,6 @@ import { Button, DateBox, NumberBox } from 'devextreme-react';
 import DataGrid, { Column, Paging, FilterRow } from 'devextreme-react/data-grid';
 import Swal from 'sweetalert2';
 import { uploadExcel } from '../apis/ApiDetalleProduccion.js';
-import { FileUploader } from 'devextreme-react/file-uploader';
-import { fi } from 'date-fns/locale';
 
 const NominaPage = () => {
   const [nominas, setNominas] = useState([]);
@@ -20,7 +18,7 @@ const NominaPage = () => {
   const [tipoMaquinas, setTipoMaquinas] = useState([]);
   const [listCalibres, setCalibres] = useState([]);
   const [detalleProduccion, setDetalleProduccion] = useState([]);
-  const [error, setError] = useState(null);
+  const [error, setErrors] = useState({});
   const [loading, setLoading] = useState(true);
   const [selectedValue, setSelectedValue] = useState(null);
   const [selectedEmpleado, setSelectedEmpleado] = useState(null);
@@ -51,7 +49,10 @@ const NominaPage = () => {
         const data = await getNominas();
         setNominas(data.resultado);
       } catch (error) {
-        setError('Error al cargar las nóminas: ' + error);
+        setErrors((prevErrors) => ({
+          ...prevErrors,
+          fetchNominas: 'Error al cargar las nóminas: ' + error.message,
+        }));
       } finally {
         setLoading(false);
       }
@@ -70,7 +71,10 @@ const NominaPage = () => {
           setEmpleados([]);
         }
       } catch (error) {
-        setError('Error al cargar los empleados: ' + error);
+        setErrors((prevErrors) => ({
+          ...prevErrors,
+          fetchEmpleados: 'Error al cargar los empleados: ' + error.message,
+        }));
       }
     };
     fetchEmpleados();
@@ -82,7 +86,10 @@ const NominaPage = () => {
         const data = await getTipoMaquinasActivas();
         setTipoMaquinas(data.resultado);
       } catch (error) {
-        setError('Error al cargar los tipos de máquinas: ' + error);
+        setErrors((prevErrors) => ({
+          ...prevErrors,
+          fetchTipoMaquinas: 'Error al cargar los tipos de máquinas: ' + error.message,
+        }));
       }
     };
     fetchTipoMaquinas();
@@ -92,21 +99,22 @@ const NominaPage = () => {
     const fetchCalibres = async () => {
       if (selectedTipoMaquina) {
         try {
-          /*console.log(selectedTipoMaquina)*/
           const data = await getCalibresByMaquina(selectedTipoMaquina);
           setCalibres(data.resultado); 
         } catch (error) {
-          setError('Error al cargar los calibres: ' + error);
+          setErrors((prevErrors) => ({
+            ...prevErrors,
+            fetchCalibres: 'Error al cargar los calibres: ' + error.message,
+          }));
         } finally {
-        setLoading(false);
+          setLoading(false);
         }
       } else {
-        setCalibres([]); 
+        setCalibres([]);
       }
     };
-  
     fetchCalibres();
-  }, [selectedTipoMaquina]); 
+  }, [selectedTipoMaquina]);
 
   useEffect(() => {
     const fetchDetalleProduccion = async () => {
@@ -119,11 +127,15 @@ const NominaPage = () => {
           setDetalleProduccion([]);
         }
       } catch (error) {
-        setError('Error al cargar el detalle de producción: ' + error);
+        setErrors((prevErrors) => ({
+          ...prevErrors,
+          fetchDetalleProduccion: 'Error al cargar el detalle de producción: ' + error.message,
+        }));
       }
     };
     fetchDetalleProduccion();
   }, [selectedNomina]);
+
 
   const handleUpload = async () => {
     if (file == null) {
@@ -243,7 +255,7 @@ const NominaPage = () => {
     try {
       const result = await updateAplicarDetalleProduccionInSoftland(selectedNomina.nominaId, selectedNomina.consecutivo);
       if (result.success) {
-        showAlert('success', result.message, false, 1200)
+        showAlert('success', result.message, false, 1500)
         await fetchDetalleProduccion();
       } else {
         showAlert('Error', result.message, true, 0)
@@ -322,11 +334,29 @@ const NominaPage = () => {
     }
   };
 
-  if (loading) return <div>Cargando...</div>;
-  if (error) return <div>{error}</div>;
-
   return (
     <div className="container">
+
+        {loading && (
+          <div className="d-flex justify-content-center mt-3">
+          <div className="spinner-border text-primary" role="status">
+            <span className="sr-only"></span>
+          </div>
+        </div>
+        )}
+
+      {Object.keys(error).length > 0 && (
+        <div className="alert alert-danger alert-dismissible fade show mt-3" role="alert">
+          <strong>Errores:</strong>
+          <ul>
+            {Object.values(error).map((error, index) => (
+              <li key={index}>{error}</li>
+            ))}
+          </ul>
+          <button type="button" className="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      )}
+        
         <br />
         <h1>Procesamiento de Nómina</h1>
         <br />

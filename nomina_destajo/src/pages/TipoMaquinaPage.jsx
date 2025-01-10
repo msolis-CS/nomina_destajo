@@ -8,7 +8,7 @@ import 'devextreme/dist/css/dx.light.css';
 const TipoMaquinaPage = () => {
   const [tipoMaquina, setTipoMaquina] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setErrors] = useState({})
   const [modalVisible, setModalVisible] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false); 
   const [newTipoMaquina, setNewTipoMaquina] = useState({
@@ -23,7 +23,10 @@ const TipoMaquinaPage = () => {
         const data = await getTipoMaquinas();
         setTipoMaquina(data.resultado);
       } catch (error) {
-        setError('Error al cargar tipos de máquina: ' + error);
+          setErrors((prevErrors) => ({
+            ...prevErrors,
+            fetchTiposMaquina: 'Error al cargar la tabla de los tipos de máquina: ' + error.message,
+          }));
       } finally {
         setLoading(false);
       }
@@ -148,13 +151,32 @@ const TipoMaquinaPage = () => {
     })
     setModalVisible(false);
     setIsEditMode(false);
-  }
-
-  if (loading) return <div>Cargando...</div>;
-  if (error) return <div>{error}</div>;
-
+  } 
+  
   return (
+    
     <div className="container">
+
+      {loading && (
+        <div className="d-flex justify-content-center mt-3">
+        <div className="spinner-border text-primary" role="status">
+          <span className="sr-only"></span>
+        </div>
+      </div>
+      )}
+
+      {Object.keys(error).length > 0 && (
+        <div className="alert alert-danger alert-dismissible fade show mt-3" role="alert">
+          <strong>Errores:</strong>
+          <ul>
+            {Object.values(error).map((error, index) => (
+              <li key={index}>{error}</li>
+            ))}
+          </ul>
+          <button type="button" className="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      )}
+      
       <br />
       <h1>Lista de Tipos de Maquinas</h1>
       <br />
