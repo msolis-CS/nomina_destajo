@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import 'devextreme/dist/css/dx.light.css';
-import { getNominas } from '../apis/ApiNomina.js';
+import { getNominas, updateEstadoNomina } from '../apis/ApiNomina.js';
 import { getDetalleProduccionByNomina, saveDetalleProduccion, deleteDetalleProduccion, updateAplicarDetalleProduccionInSoftland, updateDesaplicarDetalleProduccionInSoftland } from '../apis/ApiDetalleProduccion.js';
 import { getEmpleadoByNomina } from '../apis/ApiEmpleadoNomina.js';
 import { getTipoMaquinasActivas } from '../apis/ApiTipoMaquina.js';
@@ -8,9 +8,11 @@ import { getCalibresByMaquina } from '../apis/ApiCalibreMaquina.js';
 import SelectBox from 'devextreme-react/select-box';
 import TextBox from 'devextreme-react/text-box';
 import { Button, DateBox, NumberBox } from 'devextreme-react';
-import DataGrid, { Column, Paging, FilterRow } from 'devextreme-react/data-grid';
+import DataGrid, { Column, Paging, FilterRow, Summary, TotalItem } from 'devextreme-react/data-grid';
 import Swal from 'sweetalert2';
 import { uploadExcel } from '../apis/ApiDetalleProduccion.js';
+import CheckBox from 'devextreme-react/check-box';
+import * as XLSX from 'xlsx';
 
 const NominaPage = () => {
   const [nominas, setNominas] = useState([]);
@@ -23,6 +25,7 @@ const NominaPage = () => {
   const [selectedValue, setSelectedValue] = useState(null);
   const [selectedEmpleado, setSelectedEmpleado] = useState(null);
   const [selectedTipoMaquina, setSelectedTipoMaquina] = useState(null);
+  const [esDoble, setEsDoble] = useState(false);
   const [selectedCalibre, setSelectedCalibre] = useState(null);
   const [selectedNomina, setSelectedNomina] = useState({
     nominaId: '',
@@ -34,7 +37,6 @@ const NominaPage = () => {
     periodo: Date(),
   });
   const [file, setFile] = useState(null);
-
   const [cantidad, setCantidad] = useState('');
   const [horas, setHoras] = useState('');
   const [diaFecha, setDiaFecha] = useState(new Date().toLocaleDateString('en-CA'));
@@ -136,7 +138,6 @@ const NominaPage = () => {
     fetchDetalleProduccion();
   }, [selectedNomina]);
 
-
   const handleUpload = async () => {
     if (file == null) {
       Swal.fire('Error', `Selecciona un archivo.`, 'error');
@@ -153,6 +154,8 @@ const NominaPage = () => {
           showConfirmButton: false,
           timer: 1200,
         });
+        setFile(null)
+        await fetchDetalleProduccion();
       } else {
         showAlert('error', response.message, true, 0)
       }
@@ -160,6 +163,21 @@ const NominaPage = () => {
       Swal.fire('Error', error.message || 'No se pudo eliminar subir el archivo', 'error');
     }
   };
+
+  const handleDownloadTemplate = () => {
+    const wb = XLSX.utils.book_new();
+    const ws_data = [
+      ["Nomina", "Consecutivo", "Cod Empleado", "Tipo Maquina", "Calibre", "Fecha", "Cantidad", "Horas", "Doble"], 
+      ["Texto", "Texto", "Texto", "Texto", "Texto", "Fecha Corta", "Numero", "Numero", "Texto (S o N)"], 
+    ];
+
+    const ws = XLSX.utils.aoa_to_sheet(ws_data);
+    
+    XLSX.utils.book_append_sheet(wb, ws, "Plantilla");
+
+    XLSX.writeFile(wb, "Plantilla_Detalle_Produccion.xlsx");
+  };
+  
 
   const validateForm = () => {
     if (!selectedEmpleado || !selectedTipoMaquina || !selectedCalibre || !cantidad || !horas) {
@@ -176,6 +194,21 @@ const NominaPage = () => {
     }
     return true;
   };  
+
+  const handleDateChange = (e) => {
+    let selectedDate = e.value;
+
+    if (typeof selectedDate === "string") {
+        selectedDate = new Date(selectedDate.replace(/-/g, '/')); 
+    }
+    setDiaFecha(selectedDate);
+
+    if (selectedDate && selectedDate.getDay() === 0) {
+        setEsDoble(true);
+    } else {
+        setEsDoble(false);
+    }
+};
 
   const showAlert = (icon, title, confirm, timer) => {
     Swal.fire({
@@ -255,8 +288,17 @@ const NominaPage = () => {
     try {
       const result = await updateAplicarDetalleProduccionInSoftland(selectedNomina.nominaId, selectedNomina.consecutivo);
       if (result.success) {
-        showAlert('success', result.message, false, 1500)
-        await fetchDetalleProduccion();
+
+        const response = await updateEstadoNomina(selectedNomina.nominaId);
+
+        if (response.success) {
+          //showAlert('success', response.message, false, 1200)
+          showAlert('success', result.message, false, 1500)
+          await fetchDetalleProduccion();
+        } else {
+          Swal.fire('Error', response.message, 'error');
+        }
+        
       } else {
         showAlert('Error', result.message, true, 0)
       }
@@ -299,6 +341,7 @@ const NominaPage = () => {
       horas: horas,
       monto: 0,
       diaFecha: diaFecha,
+      EsDoble: esDoble ? 'S' : 'N'
     };
 
     try {
@@ -313,6 +356,7 @@ const NominaPage = () => {
           //setSelectedEmpleado(null);
           setSelectedTipoMaquina(null);
           setCalibres(null);
+          setEsDoble(false);
 
         } else {
           Swal.fire('Error', response.message, 'error');
@@ -451,7 +495,7 @@ const NominaPage = () => {
                     <label htmlFor="diaFecha" className="me-3">Fecha:</label>
                     <DateBox
                       value={diaFecha}
-                      onValueChanged={(e) => setDiaFecha(e.value)}
+                      onValueChanged={handleDateChange}
                       className="me-3 w-50"
                       displayFormat={"dd/MM/yyyy"}
                     />
@@ -492,6 +536,14 @@ const NominaPage = () => {
                       className="me-3 w-50"
                     />
                   </div>
+                  <div className="d-flex align-items-center mb-3">
+                  <label htmlFor="esDoble" className="me-2">¿Es Doble?</label>
+                  <CheckBox
+                    value={esDoble}
+                    onValueChanged={(e) => setEsDoble(e.value)}
+                    className="me-3 w-50"
+                  />
+                </div>
                   <Button
                     type="success"
                     text="Guardar Detalle"
@@ -526,6 +578,14 @@ const NominaPage = () => {
                       onClick={handleUpload}
                     />
                   </div>
+                  <div className="mt-3">
+                    <Button
+                      text="Descargar Plantilla"
+                      type="default"
+                      stylingMode="contained"
+                      onClick={handleDownloadTemplate} 
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -533,7 +593,12 @@ const NominaPage = () => {
         </div>
       
         <h1 className="mt-4">Detalle de Producción</h1>
-        <DataGrid dataSource={detalleProduccion} showBorders={true} className="mt-4" columnAutoWidth={true} height={400}>
+        <DataGrid 
+          dataSource={detalleProduccion} 
+          showBorders={true} 
+          className="mt-4" 
+          columnAutoWidth={true} 
+          height={400}>
           <FilterRow visible={true} />
           <Paging defaultPageSize={5} />
           <Column dataField="id" caption="Id" allowResizing={true} visible={false} />
@@ -545,7 +610,14 @@ const NominaPage = () => {
           <Column dataField="diaFecha" caption="Fecha" dataType="date" format="dd/MM/yyyy" allowResizing={true} />
           <Column dataField="cantidad" caption="Cantidad" allowResizing={true} />
           <Column dataField="horas" caption="Horas" allowResizing={true} />
-          <Column dataField="monto" caption="Monto" format="###,###,##0.00" dataType="number" allowResizing={true} />
+          <Column 
+            dataField="monto" 
+            caption="Monto" 
+            format="###,###,##0.00" 
+            dataType="number" 
+            allowResizing={true} 
+          />
+          <Column dataField="esDoble" caption="Pago doble" allowResizing={true} />
           <Column
             allowResizing={true}
             caption="Acciones"
@@ -569,8 +641,43 @@ const NominaPage = () => {
               );
             }}
           />
+          <Summary>
+          <TotalItem
+              column="diaFecha"
+              summaryType="custom"
+              displayFormat="Totales:"
+              alignment="left"
+            />
+          <TotalItem
+              column="cantidad"
+              summaryType="sum"
+              displayFormat="{0}"
+              valueFormat={{
+                type: 'fixedPoint',
+                precision: 2,
+              }}
+            />
+          <TotalItem
+              column="horas"
+              summaryType="sum"
+              displayFormat="{0}"
+              valueFormat={{
+                type: 'fixedPoint',
+                precision: 2,
+              }} 
+            />
+            <TotalItem
+              column="monto"
+              summaryType="sum"
+              displayFormat="C${0}"
+              valueFormat={{
+                type: 'fixedPoint',
+                precision: 2,
+              }}
+            />
+          </Summary>
         </DataGrid>
-      </div>
+    </div>
   );
 };
 

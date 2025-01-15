@@ -21,7 +21,7 @@ export const getMaquinasCalibre = async () => {
 
 export const getCalibresByMaquina = async (idTipoMaquina) => {
   try {
-    const response = await axios.get(`${api_maquina_calibre}GetCalibres/${idTipoMaquina}`);
+    const response = await axios.get(`${api_maquina_calibre}GetCalibres?tipoMaquinaId=${idTipoMaquina}`);
     return response.data;
   } catch (error) {
     console.error(`Error al obtener el detalle de maquina por calibre`, error);
@@ -41,18 +41,21 @@ export const saveMaquinaCalibre = async (MaquinaCalibre) => {
 
 export const updateMaquinaCalibre = async (idTipoMaquina, calibre, MaquinaCalibre) => {
   try {
-    const response = await axios.put(`${api_maquina_calibre}Update/${idTipoMaquina}/${calibre}`, MaquinaCalibre, config
-    );
+    const url = `${api_maquina_calibre}Update?tipoMaquinaId=${idTipoMaquina}&calibre=${calibre}`;
+    const response = await axios.put(url, MaquinaCalibre, config);
     return response.data;
   } catch (error) {
-    console.error(`Error al actualizar el detalle de maquina por calibre`, error);
+    console.error(`Error al actualizar el detalle de máquina por calibre`, error);
     throw new Error(error.response?.data?.message || 'Error al comunicarse con el servidor.');
   }
 };
 
+
 export const deleteMaquinaCalibre = async (idTipoMaquina, calibre) => {
   try {
-    const response = await axios.delete(`${api_maquina_calibre}Delete/${idTipoMaquina}/${calibre}`);
+    const response = await axios.delete(
+      `${api_maquina_calibre}Delete?tipoMaquinaId=${idTipoMaquina}&calibre=${calibre}`
+    );
     return response.data;
   } catch (error) {
     console.error(`Error al eliminar el detalle de maquinas por calibre:`, error);

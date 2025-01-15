@@ -22,3 +22,14 @@ export const getNominaId = async (id) => {
     throw error;
   }
 };
+
+export const updateEstadoNomina = async (nominaId) => {
+  try {
+    const url = `${api_nomina}Update?nominaId=${nominaId}`;
+    const response = await axios.put(url,config);
+    return response.data;
+  } catch (error) {
+    console.error(`Error al actualizar la nómina con ID ${nominaId}:`, error);
+    throw new Error(error.response?.data?.message || 'Error al comunicarse con el servidor.');
+  }
+};

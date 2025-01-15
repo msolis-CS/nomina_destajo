@@ -18,7 +18,7 @@ const MaquinaCalibrePage = () => {
     calibre: '',
     activo: 'S',
     coeficiente: null,
-    peso: null
+    peso: 0
   });
 
   useEffect(() => {
@@ -64,7 +64,7 @@ const MaquinaCalibrePage = () => {
       calibre: '',
       activo: 'S',
       coeficiente: null,
-      peso: null      
+      peso: 0      
     })
     setModalVisible(false);
     setIsEditMode(false);
@@ -80,7 +80,7 @@ const MaquinaCalibrePage = () => {
       if (isEditMode) {
         const response = await updateMaquinaCalibre(newMaquinaCalibre.tipoMaquinaId, newMaquinaCalibre.calibre, newMaquinaCalibre);        
 
-        if(response.succes){
+        if(response.success){
           Swal.fire({
             position: "top-center",
             icon: "success",
@@ -95,7 +95,7 @@ const MaquinaCalibrePage = () => {
       } else {
         const response = await saveMaquinaCalibre(newMaquinaCalibre);
         
-        if(response.succes){
+        if(response.success){
           Swal.fire({
             position: "top-center",
             icon: "success",
@@ -108,7 +108,7 @@ const MaquinaCalibrePage = () => {
         }
       }
 
-      setNewMaquinaCalibre({ tipoMaquinaId: '', calibre: '', activo: 'S', coeficiente: null, peso: null });
+      setNewMaquinaCalibre({ tipoMaquinaId: '', calibre: '', activo: 'S', coeficiente: null, peso: 0 });
       setModalVisible(false);
       setIsEditMode(false);
 
@@ -147,7 +147,7 @@ const MaquinaCalibrePage = () => {
 
         const response = await deleteMaquinaCalibre(idTipoMaquina, calibre);
         
-        if(response.succes){
+        if(response.success){
           Swal.fire({
             position: "top-center",
             icon: "success",

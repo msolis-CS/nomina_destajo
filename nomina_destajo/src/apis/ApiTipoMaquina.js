@@ -32,7 +32,7 @@ export const getTipoMaquinasActivas = async () => {
 
 export const getTipoMaquinaById = async (id) => {
   try {
-    const response = await axios.get(`${api_tipo_maquina}Get/${id}`);
+    const response = await axios.get(`${api_tipo_maquina}Get?id=${id}`);
     return response.data;
   } catch (error) {
     console.error(`Error al obtener el tipo de máquina con ID ${id}:`, error);
@@ -52,8 +52,8 @@ export const saveTipoMaquina = async (tipoMaquina) => {
 
 export const updateTipoMaquina = async (id, tipoMaquina) => {
   try {
-    const response = await axios.put(`${api_tipo_maquina}Update/${id}`, tipoMaquina, config
-    );
+    const url = `${api_tipo_maquina}Update?id=${id}`;
+    const response = await axios.put(url, tipoMaquina, config);
     return response.data;
   } catch (error) {
     console.error(`Error al actualizar el tipo de máquina con ID ${id}:`, error);
@@ -63,7 +63,7 @@ export const updateTipoMaquina = async (id, tipoMaquina) => {
 
 export const deleteTipoMaquina = async (id) => {
   try {
-    const response = await axios.delete(`${api_tipo_maquina}Delete/${id}`);
+    const response = await axios.delete(`${api_tipo_maquina}Delete?id=${id}`);
     return response.data;
   } catch (error) {
     console.error('Error al eliminar el tipo de máquina:', error);
