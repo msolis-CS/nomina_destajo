@@ -184,12 +184,12 @@ const NominaPage = () => {
       Swal.fire('Error', 'Por favor, complete todos los campos.', 'error');
       return false;
     }
-    const diaFechaObj = new Date(diaFecha);
-    const fechaInicioObj = new Date(selectedNomina.fechaInicio);
-    const fechaFinObj = new Date(selectedNomina.fechaFin);
-  
+    const diaFechaObj = new Date(diaFecha).toLocaleDateString('en-CA');
+    const fechaInicioObj = new Date(selectedNomina.fechaInicio).toLocaleDateString('en-CA');
+    const fechaFinObj = new Date(selectedNomina.fechaFin).toLocaleDateString('en-CA');
+
     if (diaFechaObj < fechaInicioObj || diaFechaObj > fechaFinObj) {
-      Swal.fire('Error', `La fecha debe estar entre ${fechaInicioObj.toLocaleDateString('en-CA')} y ${fechaFinObj.toLocaleDateString('en-CA')}.`, 'error');
+      Swal.fire('Error', `La fecha debe estar entre ${fechaInicioObj} y ${fechaFinObj}.`, 'error');
       return false;
     }
     return true;
@@ -617,7 +617,18 @@ const NominaPage = () => {
             dataType="number" 
             allowResizing={true} 
           />
-          <Column dataField="esDoble" caption="Pago doble" allowResizing={true} />
+          <Column
+            dataField="esDoble"
+            caption="Pago doble"
+            allowResizing={true}
+            alignment="center"
+            cellRender={({ data }) => (
+              <CheckBox
+                value={data.esDoble === "S"}
+                readOnly
+              />
+            )}
+          />
           <Column
             allowResizing={true}
             caption="Acciones"

@@ -1,4 +1,4 @@
 
 export const appsettings = {
-    apiUrl: "https://localhost:5000/api/"
+    apiUrl: "https://192.168.1.200:5000/api/"
 }

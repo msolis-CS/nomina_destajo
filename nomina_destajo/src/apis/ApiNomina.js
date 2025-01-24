@@ -23,10 +23,21 @@ export const getNominaId = async (id) => {
   }
 };
 
+export const getConsecutivos = async (id) => {
+  try {
+    const response = await axios.get(`${api_nomina}GetConsecutivos/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error(`Error al obtener los consecutivos ${id}:`, error);
+    throw error;
+  }
+};
+
+
 export const updateEstadoNomina = async (nominaId) => {
   try {
     const url = `${api_nomina}Update?nominaId=${nominaId}`;
-    const response = await axios.put(url,config);
+    const response = await axios.put(url);
     return response.data;
   } catch (error) {
     console.error(`Error al actualizar la nómina con ID ${nominaId}:`, error);
