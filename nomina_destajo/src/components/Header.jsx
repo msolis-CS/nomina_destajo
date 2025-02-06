@@ -6,7 +6,12 @@ const Header = () => {
     <header className="bg-dark text-white p-3">
       <nav className="navbar navbar-expand-lg navbar-dark">
         <div className="container">
-          <Link to="/" className="navbar-brand text-white">Nómina Destajo</Link>
+          <Link to="/" className="navbar-brand d-flex align-items-center">
+
+            <img src="/LOGO INCASA.png" alt="Logo" className="img-fluid me-2" style={{ width: "80px", height: "auto" }} />
+
+            <span className="text-white">Nómina Destajo</span>
+          </Link>
           <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
             <span className="navbar-toggler-icon"></span>
           </button>
