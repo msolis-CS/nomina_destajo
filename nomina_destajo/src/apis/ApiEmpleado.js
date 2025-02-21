@@ -1,14 +1,19 @@
-import axios from 'axios';
-import { appsettings } from '../settings/ApiUrl';
+import axios from "axios";
+import { appsettings } from "../settings/ApiUrl";
 
-const api_empleado = appsettings.apiUrl+'Empleado/'
+const api = axios.create({
+  baseURL: appsettings.apiUrl + "Empleado/",
+  withCredentials: true,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
 
 export const getEmpleados = async () => {
   try {
-    const response = await axios.get(api_empleado+'List');
+    const response = await api.get("List");
     return response.data;
   } catch (error) {
-    console.error("Error al obtener empleados", error);
-    throw error; 
+    throw new Error(error.response?.data?.message || "Hubo un problema al obtener los empleados.");
   }
 };

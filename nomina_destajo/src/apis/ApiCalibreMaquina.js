@@ -1,64 +1,57 @@
-import axios from 'axios';
-import { appsettings } from '../settings/ApiUrl';
+import axios from "axios";
+import { appsettings } from "../settings/ApiUrl";
 
-const api_maquina_calibre = appsettings.apiUrl + 'CalibreMaquina/';
+axios.defaults.withCredentials = true;
 
-const config = {
+const api = axios.create({
+  baseURL: appsettings.apiUrl + "CalibreMaquina/",
+  withCredentials: true,
   headers: {
-    'Content-Type': 'application/json',
-  }
-}
+    "Content-Type": "application/json",
+  },
+});
 
 export const getMaquinasCalibre = async () => {
   try {
-    const response = await axios.get(`${api_maquina_calibre}List`);
+    const response = await api.get("List");
     return response.data;
   } catch (error) {
-    console.error('Error al obtener el detalle de maquinas por calibre:', error);
-    throw error;
+    throw new Error(error.response?.data?.message || "Error al obtener el detalle de máquinas por calibre.");
   }
 };
 
 export const getCalibresByMaquina = async (idTipoMaquina) => {
   try {
-    const response = await axios.get(`${api_maquina_calibre}GetCalibres?tipoMaquinaId=${idTipoMaquina}`);
+    const response = await api.get(`GetCalibres?tipoMaquinaId=${idTipoMaquina}`);
     return response.data;
   } catch (error) {
-    console.error(`Error al obtener el detalle de maquina por calibre`, error);
-    throw error;
+    throw new Error(error.response?.data?.message || `Error al obtener los calibres de la máquina con ID ${idTipoMaquina}.`);
   }
 };
 
 export const saveMaquinaCalibre = async (MaquinaCalibre) => {
   try {
-    const response = await axios.post(`${api_maquina_calibre}Save`, MaquinaCalibre);
+    const response = await api.post("Save", MaquinaCalibre);
     return response.data;
   } catch (error) {
-    console.error('Error al guardar el detalle de maquina por calibre:', error);
-    throw new Error(error.response?.data?.message || 'Error al comunicarse con el servidor.');
+    throw new Error(error.response?.data?.message || "Error al guardar el detalle de máquina por calibre.");
   }
 };
 
 export const updateMaquinaCalibre = async (idTipoMaquina, calibre, MaquinaCalibre) => {
   try {
-    const url = `${api_maquina_calibre}Update?tipoMaquinaId=${idTipoMaquina}&calibre=${calibre}`;
-    const response = await axios.put(url, MaquinaCalibre, config);
+    const response = await api.put(`Update?tipoMaquinaId=${idTipoMaquina}&calibre=${calibre}`, MaquinaCalibre);
     return response.data;
   } catch (error) {
-    console.error(`Error al actualizar el detalle de máquina por calibre`, error);
-    throw new Error(error.response?.data?.message || 'Error al comunicarse con el servidor.');
+    throw new Error(error.response?.data?.message || `Error al actualizar la máquina con ID ${idTipoMaquina} y calibre ${calibre}.`);
   }
 };
 
-
 export const deleteMaquinaCalibre = async (idTipoMaquina, calibre) => {
   try {
-    const response = await axios.delete(
-      `${api_maquina_calibre}Delete?tipoMaquinaId=${idTipoMaquina}&calibre=${calibre}`
-    );
+    const response = await api.delete(`Delete?tipoMaquinaId=${idTipoMaquina}&calibre=${calibre}`);
     return response.data;
   } catch (error) {
-    console.error(`Error al eliminar el detalle de maquinas por calibre:`, error);
-    throw new Error(error.response?.data?.message || 'Error al comunicarse con el servidor.');
+    throw new Error(error.response?.data?.message || `Error al eliminar la máquina con ID ${idTipoMaquina} y calibre ${calibre}.`);
   }
 };

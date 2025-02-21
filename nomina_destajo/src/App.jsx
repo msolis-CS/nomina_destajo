@@ -7,7 +7,7 @@ import TipoMaquinaPage from './pages/TipoMaquinaPage';
 import MaquinaCalibrePage from './pages/MaquinaCalibrePage';
 import NominaPage from './pages/NominaPage';
 import LoginPage from './pages/LoginPage';
-import ProtectedRoute from './components/ProtectedRoute'; 
+import ProtectedRoute from './hooks/ProtectedRoute.jsx';
 import Logout from './pages/Logout';
 import ReportPage from './pages/ReportPage';
 
@@ -19,13 +19,11 @@ const App = () => {
         <Route path="/about" element={<AboutPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="*" element={<NotFoundPage />} />
-        <Route element={<ProtectedRoute />}>
-          <Route path="/mantenimiento/tipomaquina" element={<TipoMaquinaPage />} />
-          <Route path="/mantenimiento/maquinacalibre" element={<MaquinaCalibrePage />} />
-          <Route path="/procesamiento/nomina" element={<NominaPage />} />
-          <Route path="/logout" element={<Logout />} />
-          <Route path="/reportes" element={<ReportPage />} />
-        </Route>
+        <Route path="/mantenimiento/tipomaquina" element={<TipoMaquinaPage />} />
+        <Route path="/mantenimiento/maquinacalibre" element={<MaquinaCalibrePage />} />
+        <Route path="/procesamiento/nomina" element={<NominaPage />} />
+        <Route path="/logout" element={<Logout />} />
+        <Route path="/reportes" element={<ReportPage />} />
       </Routes>
     </Layout>
   );

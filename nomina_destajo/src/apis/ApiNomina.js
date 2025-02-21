@@ -1,46 +1,46 @@
-import axios from 'axios';
-import { appsettings } from '../settings/ApiUrl';
+import axios from "axios";
+import { appsettings } from "../settings/ApiUrl";
 
-const api_nomina = appsettings.apiUrl+'Nomina/'
+const api = axios.create({
+  baseURL: appsettings.apiUrl + "Nomina/",
+  withCredentials: true,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
 
 export const getNominas = async () => {
   try {
-    const response = await axios.get(`${api_nomina}List`);
+    const response = await api.get("List");
     return response.data;
   } catch (error) {
-    console.error("Error al obtener nominas", error);
-    throw error; 
+    throw new Error(error.response?.data?.message || "Error al obtener nóminas.");
   }
 };
 
 export const getNominaId = async (id) => {
   try {
-    const response = await axios.get(`${api_nomina}Get/${id}`);
+    const response = await api.get(`Get/${id}`);
     return response.data;
   } catch (error) {
-    console.error(`Error al obtener la nómina ${id}:`, error);
-    throw error;
+    throw new Error(error.response?.data?.message || `Error al obtener la nómina con ID ${id}.`);
   }
 };
 
 export const getConsecutivos = async (id) => {
   try {
-    const response = await axios.get(`${api_nomina}GetConsecutivos/${id}`);
+    const response = await api.get(`GetConsecutivos/${id}`);
     return response.data;
   } catch (error) {
-    console.error(`Error al obtener los consecutivos ${id}:`, error);
-    throw error;
+    throw new Error(error.response?.data?.message || `Error al obtener los consecutivos de la nómina con ID ${id}.`);
   }
 };
 
-
 export const updateEstadoNomina = async (nominaId) => {
   try {
-    const url = `${api_nomina}Update?nominaId=${nominaId}`;
-    const response = await axios.put(url);
+    const response = await api.put(`Update?nominaId=${nominaId}`);
     return response.data;
   } catch (error) {
-    console.error(`Error al actualizar la nómina con ID ${nominaId}:`, error);
-    throw new Error(error.response?.data?.message || 'Error al comunicarse con el servidor.');
+    throw new Error(error.response?.data?.message || `Error al actualizar la nómina con ID ${nominaId}.`);
   }
 };

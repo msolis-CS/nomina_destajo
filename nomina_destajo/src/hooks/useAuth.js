@@ -9,34 +9,36 @@ const useAuth = () => {
   useEffect(() => {
     const fetchAuthStatus = async () => {
       try {
-        const { IsLoggedIn } = await checkLoginStatus();
-        setIsAuthenticated(IsLoggedIn);
-
-        if (IsLoggedIn) {
-          const { UserData } = await getCurrentUser();
-          setUser(UserData);
+        const status = await checkLoginStatus();
+        console.log("checkLoginStatus() response:", status);
+        setIsAuthenticated(!!status?.IsLoggedIn);
+  
+        if (status?.IsLoggedIn) {
+          const userResponse = await getCurrentUser();
+          console.log("getCurrentUser() response:", userResponse);
+          setUser(userResponse?.UserData || null);
         } else {
           setUser(null);
         }
       } catch (error) {
-        console.error('Error al verificar el estado de autenticación:', error);
+        console.error("Error en autenticación:", error);
         setUser(null);
         setIsAuthenticated(false);
       } finally {
-        setLoading(false);
+        setLoading(false); 
       }
     };
-
+  
     fetchAuthStatus();
   }, []);
-
+  
   // Iniciar sesión
   const handleLogin = async (username, password, rememberMe = false) => {
     try {
-      const { user } = await login(username, password, rememberMe);
-      console.log(user)
-      setUser(user);
-      setIsAuthenticated(true);
+      const loginResponse = await login(username, password, rememberMe);
+      console.log('Login response:', loginResponse);
+      setUser(loginResponse?.user || null);
+      setIsAuthenticated(!!loginResponse?.user);
     } catch (error) {
       console.error('Error al iniciar sesión:', error);
       throw error;

@@ -417,7 +417,6 @@ const NominaPage = () => {
     setEditingDetalle(null);
   };
 
-  // ----------------------- Render -----------------------
   return (
     <div className="container">
       {loading && (
@@ -515,7 +514,6 @@ const NominaPage = () => {
       <br />
       <div className="container mt-3">
         <div className="row">
-          {/* Formulario para nuevo registro */}
           <div className="col-md-8">
             <div className="card p-3">
               <h5 className="card-title">Formulario</h5>
@@ -524,13 +522,21 @@ const NominaPage = () => {
                   <label htmlFor="empleado" className="me-4">Empleado:</label>
                   <SelectBox
                     value={selectedEmpleado}
-                    dataSource={empleados}
-                    displayExpr="empleado.nombre"
+                    dataSource={empleados.map((empleado) => {
+                      const nombreConId = `${empleado.empleado.nombre} (${empleado.empleadoId})`;
+                      return {
+                        ...empleado,
+                        nombreConId, 
+                      };
+                    })}
+                    displayExpr="nombreConId"
                     valueExpr="empleadoId"
                     onValueChanged={(e) => setSelectedEmpleado(e.value)}
                     className="me-3 w-50"
                     searchEnabled={true}
+                    showClearButton={true}
                   />
+
                   <label htmlFor="diaFecha" className="me-3">Fecha:</label>
                   <DateBox
                     value={diaFecha}
@@ -549,6 +555,7 @@ const NominaPage = () => {
                     onValueChanged={(e) => setSelectedTipoMaquina(e.value)}
                     className="me-3 w-50"
                     searchEnabled={true}
+                    showClearButton={true}
                   />
                   <label htmlFor="calibre" className="me-3">Calibre:</label>
                   <SelectBox
@@ -559,6 +566,7 @@ const NominaPage = () => {
                     onValueChanged={(e) => setSelectedCalibre(e.value)}
                     className="me-3 w-50"
                     searchEnabled={true}
+                    showClearButton={true}
                   />
                 </div>
                 <div className="d-flex align-items-center mb-3">
