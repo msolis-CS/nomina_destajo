@@ -111,3 +111,19 @@ export const deleteDetalleProduccion = async (id) => {
     throw error;
   }
 };
+
+export const deleteMultipleDetallesProduccion = async (ids) => {
+  try {
+    console.log(ids)
+    const response = await axios.delete(`${api_detalle_produccion}DeleteMultiple`, {
+      data: ids , 
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error al eliminar múltiples detalles de producción:', error);
+    throw error;
+  }
+};

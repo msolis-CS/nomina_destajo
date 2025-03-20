@@ -1,15 +1,15 @@
 import { useEffect, useState } from 'react';
 import 'devextreme/dist/css/dx.light.css';
 import { getNominas, updateEstadoNomina } from '../apis/ApiNomina.js';
-// Se agrega la función updateDetalleProduccion en la importación
-import { 
+import {
   getDetalleProduccionByNomina, 
   saveDetalleProduccion, 
   updateDetalleProduccion, 
   deleteDetalleProduccion, 
   updateAplicarDetalleProduccionInSoftland, 
   updateDesaplicarDetalleProduccionInSoftland,
-  uploadExcel
+  uploadExcel,
+  deleteMultipleDetallesProduccion
 } from '../apis/ApiDetalleProduccion.js';
 import { getEmpleadoByNomina } from '../apis/ApiEmpleadoNomina.js';
 import { getTipoMaquinasActivas } from '../apis/ApiTipoMaquina.js';
@@ -17,7 +17,7 @@ import { getCalibresByMaquina } from '../apis/ApiCalibreMaquina.js';
 import SelectBox from 'devextreme-react/select-box';
 import TextBox from 'devextreme-react/text-box';
 import { Button, DateBox, NumberBox } from 'devextreme-react';
-import DataGrid, { Column, Paging, FilterRow, Summary, TotalItem } from 'devextreme-react/data-grid';
+import DataGrid, { Column, Paging, FilterRow, Summary, TotalItem, Selection } from 'devextreme-react/data-grid';
 import Swal from 'sweetalert2';
 import CheckBox from 'devextreme-react/check-box';
 import * as XLSX from 'xlsx';
@@ -45,6 +45,7 @@ const NominaPage = () => {
     fechaFin: Date(),
     periodo: Date(),
   });
+  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   const [file, setFile] = useState(null);
   const [cantidad, setCantidad] = useState('');
   const [horas, setHoras] = useState('');
@@ -264,6 +265,43 @@ const NominaPage = () => {
       }
     } catch (error) {
       Swal.fire('Error', error.message || 'No se pudo eliminar el detalle de producción.', 'error');
+    } 
+  };
+  
+  const handleSelectionChange = (e) => {
+    setSelectedRowKeys(e.selectedRowKeys);
+  };
+
+  const handleDeleteMultiple = async () => {
+    if (selectedRowKeys.length === 0) {
+      //alert("Seleccione al menos un registro.");
+      return;
+    }
+
+    const result = await Swal.fire({
+      title: `¿Está seguro de eliminar ${selectedRowKeys.length} registros?`,
+      text: 'Esta acción no se puede deshacer.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar',
+    });
+
+    try {
+      if (result.isConfirmed) {
+        showLoading("Eliminando...");
+        const response = await deleteMultipleDetallesProduccion(selectedRowKeys);
+        if (response.success) {
+        showAlert('success', response.message, false, 1200);
+        setDetalleProduccion(detalleProduccion.filter(d => !selectedRowKeys.includes(d.id)));
+        setSelectedRowKeys([]); 
+          await fetchDetalleProduccion();
+        } else {
+          Swal.fire('Error', response.message, 'error');
+        }
+      }
+    } catch (error) {
+      Swal.fire('Error', error.message || 'No se pudo eliminar los registros de detalle de producción.', 'error');
     } 
   };
 
@@ -640,13 +678,18 @@ const NominaPage = () => {
       </div>
 
       <h1 className="mt-4">Detalle de Producción</h1>
-      <DataGrid 
-        dataSource={detalleProduccion} 
-        showBorders={true} 
-        className="mt-4" 
-        columnAutoWidth={true} 
-        height={400}
-      >
+      <DataGrid
+          dataSource={detalleProduccion}
+          showBorders={true}
+          className="mt-4"
+          columnAutoWidth={true}
+          height={400}
+          keyExpr="id" 
+          selectedRowKeys={selectedRowKeys} 
+          onSelectionChanged={handleSelectionChange}
+        >
+          
+        <Selection mode="multiple" /> 
         <FilterRow visible={true} />
         <Paging defaultPageSize={5} />
         <Column dataField="id" caption="Id" allowResizing={true} visible={false} />
@@ -736,6 +779,15 @@ const NominaPage = () => {
           />
         </Summary>
       </DataGrid>
+
+      <button 
+        className="btn btn-danger mt-2" 
+        onClick={handleDeleteMultiple}
+        disabled={selectedRowKeys.length === 0} 
+      >
+        Eliminar Seleccionados
+      </button>
+
 
       {/* Modal para editar el detalle de producción */}
       {modalDetalleVisible && editingDetalle && (

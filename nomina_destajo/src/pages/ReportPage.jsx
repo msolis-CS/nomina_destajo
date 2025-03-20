@@ -3,6 +3,7 @@ import Swal from 'sweetalert2';
 import { Button } from 'devextreme-react/button'; 
 import { getReporte } from '../Apis/ApiReporte'; 
 import { getNominas, getConsecutivos } from '../apis/ApiNomina.js';
+import { getEmpleadoByNomina } from '../apis/ApiEmpleadoNomina.js';
 import {SelectBox, DateBox} from 'devextreme-react/';
 import { getTipoMaquinas } from '../apis/ApiTipoMaquina.js';
 
@@ -12,19 +13,23 @@ const ReportPage = () => {
   const [pdfData, setPdfData] = useState('');
   const [nominas, setNominas] = useState([]);  
   const [tipoMaquinas, setTipoMaquinas] = useState([]);  
-  const [consecutivos, setConsecutivos] = useState([]);  
+  const [consecutivos, setConsecutivos] = useState([]); 
+  const [disableTipoMaquina, setDisableTipoMaquina] = useState(false);
+  const [empleados, setEmpleados] = useState([]);
+  const [disableEmpleado, setDisableEmpleado] = useState(false); 
   const [filterAndReportData, setFilterAndReportData] = useState({
     reporte: '',
     fechaInicio: new Date(),
     fechaFin: new Date(),
     nomina: null,
     numeroNomina: null,
-    tipoMaquina: null
+    tipoMaquina: null,
+    empleado: null
   })
   const reportes = [
-    { tipo: '1', descripcion: 'Reporte de Producción por Máquina' }
+    { tipo: '1', descripcion: 'Reporte de Producción por Máquina' },
+    { tipo: '2', descripcion: 'Reporte Producción por Empleado' }
   ]
-
 
   useEffect(() => {
       const fetchNominas = async () => {
@@ -82,20 +87,56 @@ const ReportPage = () => {
         fetchConsecutivos();
       }, [filterAndReportData.nomina]);
 
-    function filterAndReportDataChanged(e) {
-      let name = e.component.option('name')
-      setFilterAndReportData((prev) => ({
-        ...prev,
-        [name]: e.value,
-      }))
-    }  
+      useEffect(() => {
+        const fetchEmpleados = async () => {
+            if (!filterAndReportData.nomina || !filterAndReportData.numeroNomina) {
+                setEmpleados([]);
+                return;
+            }
+            try {
+                const data = await getEmpleadoByNomina(filterAndReportData.nomina, filterAndReportData.numeroNomina);
+                setEmpleados(data.resultado);
+            } catch (error) {
+                setErrors((prevErrors) => ({
+                    ...prevErrors,
+                    fetchEmpleados: 'Error al cargar los empleados: ' + (error.message || "Error desconocido."),
+                }));
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchEmpleados();
+    }, [filterAndReportData.nomina, filterAndReportData.numeroNomina]);
 
-  const showReport = async (tipoReporte) => {
+    function filterAndReportDataChanged(e) {
+      let name = e.component.option('name');
+      let value = e.value;
+    
+      setFilterAndReportData((prev) => {
+        let updatedData = {
+          ...prev,
+          [name]: value
+        };
+    
+
+        if (name === 'tipoReporte') {
+          updatedData.tipoMaquina = value === '2' ? null : prev.tipoMaquina;
+          updatedData.empleado = value === '1' ? null : prev.empleado;
+
+          setDisableTipoMaquina(value === '2');
+          setDisableEmpleado(value === '1');
+        }
+    
+        return updatedData;
+      });
+    }
+
+  const showReport = async () => {
     setLoading(true);
     setErrors({});
 
     try {
-      const data = await getReporte(tipoReporte);
+      const data = await getReporte(filterAndReportData.tipoReporte,filterAndReportData.fechaInicio.toISOString().split('T')[0],filterAndReportData.fechaFin.toISOString().split('T')[0],filterAndReportData.nomina,filterAndReportData.numeroNomina,filterAndReportData.tipoMaquina, filterAndReportData.empleado);
 
       if (data.success && data.base64Pdf) {
         setPdfData(data.base64Pdf); 
@@ -123,15 +164,6 @@ const ReportPage = () => {
   return (
     <div className="container mt-4">
       <h1 className="mb-4">Reportes</h1>
-     {/*} <Button
-        text="Ver Reporte Tipo 1"
-        onClick={() => showReport('1')}
-        disabled={loading}
-        type="success"
-        width={200}
-        height={40}
-      /> */}
-
       {loading && (
         <div className="d-flex justify-content-center mt-3">
           <div className="spinner-border text-primary" role="status">
@@ -154,14 +186,14 @@ const ReportPage = () => {
       <div className="d-flex align-items-center">
           <label htmlFor="reportes" className="me-4">Reportes:</label>
           <SelectBox
-          name='tipoReporte'
-          value={filterAndReportData.tipoReporte}
-          dataSource={reportes}
-          displayExpr="descripcion"
-          valueExpr="nominaId"
-          onValueChanged={filterAndReportDataChanged}
-          className="me-3 w-50"
-        />
+              name='tipoReporte'
+              value={filterAndReportData.tipoReporte}
+              dataSource={reportes}
+              displayExpr="descripcion"
+              valueExpr="tipo"
+              onValueChanged={filterAndReportDataChanged}
+              className="me-3 w-50"
+          />
         </div>
       <br/>
         
@@ -175,6 +207,8 @@ const ReportPage = () => {
           valueExpr="nominaId"
           onValueChanged={filterAndReportDataChanged}
           className="me-3 w-50"
+          showClearButton={true}
+          searchEnabled={true}
         />
         <label htmlFor="consecutivo" className="me-4">Consecutivo:</label>
           <SelectBox
@@ -185,6 +219,8 @@ const ReportPage = () => {
           valueExpr="numeroNomina"
           onValueChanged={filterAndReportDataChanged}
           className="me-3 w-50"
+          showClearButton={true}
+          searchEnabled={true}
         />
       </div>
       <br />
@@ -194,6 +230,7 @@ const ReportPage = () => {
           id="fechaInicio"
           name='fechaInicio'
           value={filterAndReportData.fechaInicio}
+          onValueChanged={filterAndReportDataChanged}
           className="me-3 w-50"
           displayFormat={"dd/MM/yyyy"}
         />
@@ -202,23 +239,58 @@ const ReportPage = () => {
           id="fechaFin"
           name='fechaFin'
           value={filterAndReportData.fechaFin}
+          onValueChanged={filterAndReportDataChanged}
           className="me-3 w-50"
           displayFormat={"dd/MM/yyyy"}
         />         
       </div>
       <br/>        
       <div className="d-flex align-items-center">
-        <label htmlFor="tipoMaquina" className="me-3">Tipo de Máquina:</label>
+        <label htmlFor="tipoMaquina" className="me-2">Tipo de Máquina:</label>
         <SelectBox
-          name='tipoMaquina'
-          value={filterAndReportData.tipoMaquina}
-          dataSource={tipoMaquinas}
-          displayExpr="descripcion"
-          valueExpr="tipoMaquinaId"
+            name='tipoMaquina'
+            value={filterAndReportData.tipoMaquina}
+            dataSource={tipoMaquinas}
+            displayExpr="descripcion"
+            valueExpr="tipoMaquinaId"
+            onValueChanged={filterAndReportDataChanged}
+            className="me-3 w-50"
+            disabled={disableTipoMaquina}
+            showClearButton={true}
+            searchEnabled={true}
+          />
+        <label htmlFor="empleado" className="me-3">Empleado:</label>
+        <SelectBox
+          name='empleado'
+          value={filterAndReportData.empleado}
+          dataSource={empleados.map((empleado) => {
+            const nombreConId = `${empleado.empleado.nombre} (${empleado.empleadoId})`;
+            return {
+              ...empleado,
+              nombreConId, 
+            };
+          })}
+          displayExpr="nombreConId"
+          valueExpr="empleadoId"
           onValueChanged={filterAndReportDataChanged}
           className="me-3 w-50"
+          disabled={disableEmpleado}
+          showClearButton={true}
+          searchEnabled={true}
         />
-      </div>
+        </div>
+        <br/>
+        <div>
+          <Button
+            text="Imprimir"
+            onClick={() => showReport()}
+            disabled={loading}
+            type="success"
+            width={200}
+            height={40}
+          /> 
+        </div>
+
       {pdfData && (
         <div>
           <h2 className="mt-4">Reporte Generado</h2>
