@@ -10,12 +10,12 @@ const useAuth = () => {
     const fetchAuthStatus = async () => {
       try {
         const status = await checkLoginStatus();
-        console.log("checkLoginStatus() response:", status);
-        setIsAuthenticated(!!status?.IsLoggedIn);
+        // console.log("checkLoginStatus() response:", status);
+        setIsAuthenticated(!!status?.isLoggedIn);
   
         if (status?.IsLoggedIn) {
           const userResponse = await getCurrentUser();
-          console.log("getCurrentUser() response:", userResponse);
+          // console.log("getCurrentUser() response:", userResponse);
           setUser(userResponse?.UserData || null);
         } else {
           setUser(null);
