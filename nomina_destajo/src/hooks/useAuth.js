@@ -1,68 +1,150 @@
-import { useState, useEffect } from 'react';
-import { login, logout, checkLoginStatus, getCurrentUser } from '../apis/login.js';
+import axios from "axios";
+import { appsettings } from "../settings/ApiUrl";
 
-const useAuth = () => {
-  const [user, setUser] = useState(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [loading, setLoading] = useState(true);
+const API_URL =  appsettings.apiUrl + "login/";
 
-  useEffect(() => {
-    const fetchAuthStatus = async () => {
-      try {
-        const status = await checkLoginStatus();
-        // console.log("checkLoginStatus() response:", status);
-        setIsAuthenticated(!!status?.isLoggedIn);
-  
-        if (status?.IsLoggedIn) {
-          const userResponse = await getCurrentUser();
-          // console.log("getCurrentUser() response:", userResponse);
-          setUser(userResponse?.UserData || null);
-        } else {
-          setUser(null);
-        }
-      } catch (error) {
-        console.error("Error en autenticación:", error);
-        setUser(null);
-        setIsAuthenticated(false);
-      } finally {
-        setLoading(false); 
+class AuthActions {
+
+  _loginVerified = false;
+  _callbacks = []
+
+  _isAuthenticated = false
+  _user = null
+  _nextSubscriptionId = 0
+
+  static get instance() {
+    return authActions
+  }
+
+  subscribe(callback) {
+    this._callbacks.push({callback, subscription: this._nextSubscriptionId++});
+    return this._nextSubscriptionId - 1;
+  }
+
+  unsubscribe(subscriptionId) {
+    const subscriptionIndex = this._callbacks
+        .map((element, index) => element.subscription === subscriptionId ? {found: true, index} : {found: false})
+        .filter(element => element.found === true);
+    if (subscriptionIndex.length !== 1) {
+      throw new Error(`Found an invalid number of subscriptions ${subscriptionIndex.length}`);
+    }
+
+    this._callbacks.splice(subscriptionIndex[0].index, 1);
+  }
+
+  notifySubscribers() {
+    for (let i = 0; i < this._callbacks.length; i++) {
+      const callback = this._callbacks[i].callback;
+      callback();
+    }
+  }
+
+  checkAuth = async () => {
+    return await axios.get(API_URL + "IsLoggedIn").then(response => {
+      console.log(response)
+      this._isAuthenticated = response.data.isLoggedIn
+    }).catch(err => {
+      console.log(err)
+      this._isAuthenticated = false
+    })
+  }
+
+  async fetchCurrentUser() {
+    await axios.get(API_URL + "CurrentUser").then((response) => {
+      console.log(response)
+      if (response.data.userData === null) {
+        this._isAuthenticated = false
+        this._user = null
+      } else {
+        // console.log(response.data.userData)
+        this._user = response.data.userData
       }
-    };
-  
-    fetchAuthStatus();
-  }, []);
-  
-  // Iniciar sesión
-  const handleLogin = async (username, password, rememberMe = false) => {
-    try {
-      const loginResponse = await login(username, password, rememberMe);
-      console.log('Login response:', loginResponse);
-      setUser(loginResponse?.user || null);
-      setIsAuthenticated(!!loginResponse?.user);
-    } catch (error) {
-      console.error('Error al iniciar sesión:', error);
-      throw error;
+    }).catch(() => {
+      this._isAuthenticated = false;
+      this._user = null;
+    });
+    this.notifySubscribers()
+  }
+
+  async isAuthenticated() {
+    await this.ensureUserManagerInitialized()
+    return this._isAuthenticated
+  }
+
+  async getCurrentUser() {
+    await this.ensureUserManagerInitialized()
+    // console.log(this._user)
+    return this._user
+  };
+
+  async getCurrentUserRoles() {
+    await this.ensureUserManagerInitialized()
+    if (this._user) {
+      return this._user.roles;
     }
-  };
+    return null;
+  }
 
-  // Cerrar sesión
-  const handleLogout = async () => {
-    try {
-      await logout();
-      setUser(null);
-      setIsAuthenticated(false);
-    } catch (error) {
-      console.error('Error al cerrar sesión:', error);
+  async getCurrentUserPermissions() {
+    await this.ensureUserManagerInitialized()
+    if (this._user) {
+      return this._user.permissions;
     }
+    return null;
+  }
+
+  login = async (loginViewModel) => {
+    return await axios
+        .post(API_URL,
+            loginViewModel
+        ).then(async (response) => {
+          if (response.data.success) {
+            this._isAuthenticated = true
+            await this.fetchCurrentUser()
+          }
+          this.notifySubscribers()
+          return response.data
+        }).catch(err => {
+          console.log(err)
+          this._isAuthenticated = false
+          this.notifySubscribers()
+        })
+  }
+
+  logout = async () => {
+    return await axios.post(API_URL + "logout").then(async (response) => {
+      if (response.data.success) {
+        this._isAuthenticated = false
+        this._user = null
+        this.notifySubscribers()
+        return {status: 'success', returnUrl: "/login"}
+      }
+      return false
+    }).catch(err => {
+      console.log(err)
+      this._isAuthenticated = false
+      this._user = null
+      this.notifySubscribers()
+    })
   };
 
-  return {
-    user,
-    isAuthenticated,
-    loading,
-    login: handleLogin,
-    logout: handleLogout,
-  };
-};
+  async ensureUserManagerInitialized() {
+    if (this._loginVerified) {
+      return;
+    }
 
-export default useAuth;
+    await this.fetchCurrentUser();
+    await this.checkAuth();
+
+    this._loginVerified = true
+  }
+}
+
+const authActions = new AuthActions();
+export default authActions
+
+//   const AuthActions = {
+//   login, logout, getCurrentUser, isAuthenticated
+// }
+
+// export default AuthActions

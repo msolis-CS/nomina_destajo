@@ -1,7 +1,20 @@
 
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import authActions from '../hooks/useAuth';
+
 
 const Header = () => {
+  const [auth, setAuth] = useState({})
+
+  useEffect(() => {
+    authActions.subscribe(async () => {
+      const authenticated = await authActions.isAuthenticated()
+      const user = await authActions.getCurrentUser()
+      setAuth({ authenticated, user })
+    })
+  }, [])
+
   return (
     <header className="bg-dark text-white p-3">
       <nav className="navbar navbar-expand-lg navbar-dark">
@@ -43,7 +56,12 @@ const Header = () => {
                 <Link to="/reportes" className="nav-link text-white">Reportes</Link>
               </li>
               <li className="nav-item">
-                <Link to="/login" className="nav-link text-white">Inicio Sesión</Link>
+                {
+                  auth.authenticated ?
+                    <Link to="/logout" className="nav-link text-white">Cerrar Sesión</Link>
+                    :
+                    <Link to="/login" className="nav-link text-white">Inicio Sesión</Link>
+                }
               </li>
             </ul>
           </div>

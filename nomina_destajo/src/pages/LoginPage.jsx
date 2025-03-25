@@ -1,9 +1,7 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { login } from "../apis/login";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
-import useAuth from "../hooks/useAuth";
-import { Navigate } from "react-router-dom";
+import Auth from "../hooks/useAuth";
 
 const LoginPage = () => {
   const [username, setUsername] = useState("");
@@ -12,14 +10,10 @@ const LoginPage = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
-
-  if (isAuthenticated) {
-    return <Navigate to="/" replace />;
-  }
+  const [returnUrl] = useSearchParams()
 
   const handleSubmit = async (event) => {
-    event.preventDefault(); // Evita la recarga de la página
+    event.preventDefault();
 
     if (!username || !password) {
       setError("Por favor, ingrese ambos campos.");
@@ -28,9 +22,10 @@ const LoginPage = () => {
 
     setLoading(true);
     try {
-      const result = await login(username, password, rememberMe);
+      const result = await Auth.login({ username, password, rememberMe });
       if (result.success) {
-        navigate("/");
+        const redirectTo = returnUrl.size > 0 ? returnUrl.get('ReturnUrl') : "/";
+        navigate(redirectTo, { replace: true })
       } else {
         setError(result.message);
       }

@@ -1,17 +1,16 @@
-import { useNavigate } from 'react-router-dom';
-import Cookies from 'js-cookie';
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import Auth from "../hooks/useAuth";
 
 const Logout = () => {
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    Cookies.remove('SoftlandAuth'); 
-    
-    // Redirigir al login
-    navigate('/login');
-  };
+  useEffect(() => {
+    Auth.logout();
+    navigate("/login"); 
+  }, []);
 
-  return <button onClick={handleLogout}>Cerrar sesión</button>;
+  return <p>Cerrando sesión...</p>;
 };
 
 export default Logout;
